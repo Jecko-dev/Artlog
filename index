@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ArtLog" />
+  <title>ArtLog</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --cream: #F5F0E8;
+      --ink: #1A1714;
+      --warm-mid: #8C7B6B;
+      --accent: #C4985A;
+      --accent-light: #E8D5B0;
+      --surface: #FDFAF5;
+      --border: #E2D9CC;
+      --danger: #C0624A;
+      --success: #5A8C6E;
+      --shadow: rgba(26,23,20,0.08);
+      --cat-m: #6A8CAF;
+      --cat-s: #8C6AAF;
+      --cat-p: #AF8C6A;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+      overflow-x: hidden;
+    }
+
+```
+/* ── HEADER ── */
+header {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(245,240,232,0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  height: 72px;
+}
+.logo { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; letter-spacing: 0.12em; }
+.logo span { color: var(--accent); font-style: italic; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 10px 20px; border-radius: 6px; border: none; cursor: pointer;
+  font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500;
+  transition: all 0.2s ease; letter-spacing: 0.02em;
+}
+.btn-primary { background: var(--ink); color: var(--cream); }
+.btn-primary:hover { background: #2e2a26; transform: translateY(-1px); box-shadow: 0 4px 16px var(--shadow); }
+.btn-outline { background: transparent; color: var(--ink); border: 1px solid var(--border); }
+.btn-outline:hover { border-color: var(--ink); background: rgba(26,23,20,0.04); }
+.btn-accent { background: var(--accent); color: white; }
+.btn-accent:hover { background: #b8893d; transform: translateY(-1px); }
+.btn-ghost { background: transparent; color: var(--warm-mid); border: none; padding: 8px; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'DM Sans', sans-serif; }
+.btn-ghost:hover { background: var(--border); color: var(--ink); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-danger:hover { background: #a8503a; }
+.btn-sm { padding: 7px 14px; font-size: 13px; }
+
+/* ── TABS ── */
+.tabs { display: flex; background: var(--cream); border-bottom: 1px solid var(--border); padding: 0 28px; }
+.tab {
+  padding: 14px 24px; cursor: pointer;
+  font-size: 14px; font-weight: 500; color: var(--warm-mid);
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+  transition: all 0.2s; letter-spacing: 0.03em;
+}
+.tab.active { color: var(--ink); border-bottom-color: var(--accent); }
+.tab:hover:not(.active) { color: var(--ink); }
+
+/* ── VIEWS ── */
+.view { display: none; }
+.view.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ══ QUEUE ══ */
+.queue-container { padding: 28px; max-width: 1100px; margin: 0 auto; }
+.queue-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.queue-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; }
+.queue-count { background: var(--accent-light); color: var(--accent); font-size: 12px; font-weight: 500; padding: 4px 10px; border-radius: 20px; margin-left: 12px; }
+
+.drop-zone {
+  display: block;
+  border: 2px dashed var(--border); border-radius: 12px;
+  padding: 48px; text-align: center; cursor: pointer;
+  transition: all 0.25s ease; margin-bottom: 28px; background: var(--surface);
+}
+.drop-zone:hover, .drop-zone.dragging { border-color: var(--accent); background: #fdf8f0; }
+.drop-zone-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
+.drop-zone p { color: var(--warm-mid); font-size: 15px; }
+.drop-zone strong { color: var(--ink); }
+#fileInput { display: none; }
+
+.queue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 16px; }
+.queue-card { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; cursor: pointer; transition: all 0.2s ease; position: relative; }
+.queue-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow); border-color: var(--accent-light); }
+.queue-card.done::after { content: '✓'; position: absolute; top: 8px; right: 8px; background: var(--success); color: white; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.queue-card-img { width: 100%; aspect-ratio: 1; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 40px; overflow: hidden; }
+.queue-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.queue-card-info { padding: 12px; }
+.queue-card-name { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.queue-card-status { font-size: 11px; color: var(--warm-mid); margin-top: 2px; }
+.queue-card-remove { position: absolute; top: 8px; left: 8px; background: rgba(26,23,20,0.5); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; font-size: 14px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+.queue-card:hover .queue-card-remove { display: flex; }
+
+/* ══ ENTRY ══ */
+.entry-container { max-width: 900px; margin: 0 auto; padding: 28px; }
+.entry-nav { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; }
+.entry-nav-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; flex: 1; }
+.entry-nav-info { font-size: 13px; color: var(--warm-mid); }
+
+.entry-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; align-items: start; }
+@media (max-width: 700px) { .entry-layout { grid-template-columns: 1fr; } }
+
+.image-panel { position: sticky; top: 100px; }
+.image-preview-box { width: 100%; aspect-ratio: 1; border-radius: 10px; overflow: hidden; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 60px; }
+.image-preview-box img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.image-filename { font-size: 12px; color: var(--warm-mid); margin-top: 10px; text-align: center; word-break: break-all; }
+
+.form-panel { display: flex; flex-direction: column; gap: 20px; }
+.field-group { display: flex; flex-direction: column; gap: 6px; }
+.field-label { font-size: 11px; font-weight: 500; letter-spacing: 0.1em; text-transform: uppercase; color: var(--warm-mid); }
+.field-required { color: var(--accent); }
+.field-input, .field-textarea {
+  width: 100%; padding: 12px 14px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; font-family: 'DM Sans', sans-serif;
+  font-size: 15px; color: var(--ink);
+  transition: border-color 0.2s, box-shadow 0.2s; -webkit-appearance: none;
+}
+.field-input:focus, .field-textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(196,152,90,0.12); }
+.field-textarea { resize: vertical; min-height: 80px; line-height: 1.5; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+/* Category picker */
+.cat-selector { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+.cat-btn {
+  padding: 14px 8px; border-radius: 8px; border: 2px solid var(--border);
+  background: var(--surface); cursor: pointer; text-align: center;
+  transition: all 0.2s; font-family: 'DM Sans', sans-serif;
+}
+.cat-btn-letter { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; display: block; }
+.cat-btn-label { font-size: 11px; color: var(--warm-mid); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 2px; display: block; }
+.cat-btn[data-cat="M"] .cat-btn-letter, .cat-btn[data-ecat="M"] .cat-btn-letter { color: var(--cat-m); }
+.cat-btn[data-cat="S"] .cat-btn-letter, .cat-btn[data-ecat="S"] .cat-btn-letter { color: var(--cat-s); }
+.cat-btn[data-cat="P"] .cat-btn-letter, .cat-btn[data-ecat="P"] .cat-btn-letter { color: var(--cat-p); }
+.cat-btn[data-cat="M"].selected, .cat-btn[data-ecat="M"].selected { background: #EEF3F8; border-color: var(--cat-m); }
+.cat-btn[data-cat="S"].selected, .cat-btn[data-ecat="S"].selected { background: #F3EEF8; border-color: var(--cat-s); }
+.cat-btn[data-cat="P"].selected, .cat-btn[data-ecat="P"].selected { background: #F8F3EE; border-color: var(--cat-p); }
+.cat-btn:not(.selected):hover { border-color: var(--accent-light); background: #fdf8f0; }
+
+.cat-number-preview {
+  text-align: center; padding: 10px 14px; border-radius: 8px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 13px; color: var(--warm-mid); margin-top: 8px;
+}
+.cat-number-preview strong { color: var(--ink); font-size: 15px; }
+
+.form-actions { display: flex; gap: 12px; padding-top: 8px; flex-wrap: wrap; }
+.form-actions .btn { flex: 1; justify-content: center; min-width: 120px; }
+
+.progress-bar-wrap { background: var(--border); border-radius: 4px; height: 4px; margin-bottom: 28px; }
+.progress-bar { background: var(--accent); height: 4px; border-radius: 4px; transition: width 0.4s ease; }
+
+/* ══ CATALOGUE ══ */
+.log-container { padding: 28px; max-width: 1200px; margin: 0 auto; }
+.log-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+.log-title { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 300; }
+
+.filter-bar {
+  display: flex; gap: 10px; margin-bottom: 16px;
+  flex-wrap: wrap; align-items: center;
+  background: var(--surface); padding: 14px 18px;
+  border-radius: 10px; border: 1px solid var(--border);
+}
+.filter-label { font-size: 11px; font-weight: 600; letter-spacing: 0.09em; text-transform: uppercase; color: var(--warm-mid); white-space: nowrap; }
+.filter-divider { width: 1px; height: 22px; background: var(--border); }
+
+.filter-chip {
+  padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--cream); cursor: pointer; font-size: 13px; font-weight: 500;
+  color: var(--warm-mid); transition: all 0.18s; font-family: 'DM Sans', sans-serif;
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--ink); }
+.filter-chip.active { color: white; border-color: transparent; }
+.filter-chip[data-cat="ALL"].active { background: var(--ink); }
+.filter-chip[data-cat="M"].active { background: var(--cat-m); }
+.filter-chip[data-cat="S"].active { background: var(--cat-s); }
+.filter-chip[data-cat="P"].active { background: var(--cat-p); }
+
+.filter-select {
+  padding: 6px 28px 6px 12px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--cream); font-size: 13px; color: var(--warm-mid);
+  font-family: 'DM Sans', sans-serif; cursor: pointer; -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238C7B6B'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+.filter-select:focus { outline: none; border-color: var(--accent); }
+
+.filter-search {
+  padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+  background: var(--cream); font-size: 13px; color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+}
+.filter-search:focus { outline: none; border-color: var(--accent); }
+
+.results-info { font-size: 13px; color: var(--warm-mid); margin-bottom: 16px; }
+
+.catalogue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 20px; }
+
+.cat-card { background: var(--surface); border-radius: 12px; border: 1px solid var(--border); overflow: hidden; transition: all 0.2s ease; }
+.cat-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px var(--shadow); }
+.cat-card-img { width: 100%; aspect-ratio: 4/3; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 40px; overflow: hidden; }
+.cat-card-img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.cat-card-body { padding: 14px; }
+.cat-card-num { display: inline-flex; align-items: center; justify-content: center; padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; color: white; margin-bottom: 8px; letter-spacing: 0.04em; }
+.cat-card-num.M { background: var(--cat-m); }
+.cat-card-num.S { background: var(--cat-s); }
+.cat-card-num.P { background: var(--cat-p); }
+.cat-card-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 400; margin-bottom: 4px; line-height: 1.25; }
+.cat-card-gallery { font-size: 12px; color: var(--accent); font-weight: 500; margin-bottom: 8px; }
+.cat-card-details { font-size: 12px; color: var(--warm-mid); line-height: 1.8; }
+.cat-card-price { font-size: 15px; font-weight: 500; color: var(--ink); margin-top: 10px; }
+.cat-card-actions { display: flex; padding: 10px 14px; border-top: 1px solid var(--border); }
+.cat-card-actions .btn { flex: 1; justify-content: center; }
+
+.empty-state { text-align: center; padding: 80px 28px; }
+.empty-state h3 { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 300; margin-bottom: 8px; }
+.empty-state p { color: var(--warm-mid); font-size: 15px; }
+
+/* ══ EDIT MODAL ══ */
+.modal-overlay { position: fixed; inset: 0; background: rgba(26,23,20,0.55); display: flex; align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px); }
+.modal-overlay.hidden { display: none; }
+.modal { background: var(--surface); border-radius: 16px; padding: 32px; max-width: 520px; width: 94%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; animation: fadeIn 0.2s ease; }
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
+.modal-header h2 { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 300; }
+.modal-form { display: flex; flex-direction: column; gap: 16px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+.modal-actions .btn { flex: 1; justify-content: center; min-width: 100px; }
+
+/* ══ TOAST ══ */
+.toast-container { position: fixed; bottom: 28px; right: 28px; z-index: 999; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.toast { background: var(--ink); color: var(--cream); padding: 14px 20px; border-radius: 8px; font-size: 14px; max-width: 300px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); animation: slideIn 0.3s ease; }
+.toast.success { background: var(--success); }
+.toast.error { background: var(--danger); }
+@keyframes slideIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+```
+
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Art<span>Log</span></div>
+  <label class="btn btn-primary" for="fileInput" style="cursor:pointer;">+ Add to Queue</label>
+</header>
+
+<div class="tabs">
+  <div class="tab active" id="tab-queue" onclick="showView('queue',this)">Queue</div>
+  <div class="tab" id="tab-log" onclick="showView('log',this)">Catalogue</div>
+</div>
+
+<!-- ── QUEUE ── -->
+
+<div id="view-queue" class="view active">
+  <div class="queue-container">
+    <div class="queue-header">
+      <div style="display:flex;align-items:center;">
+        <h1 class="queue-title">Queue</h1>
+        <span class="queue-count" id="queueCount">0 pending</span>
+      </div>
+      <button class="btn btn-outline btn-sm" onclick="clearDone()">Clear completed</button>
+    </div>
+    <label class="drop-zone" id="dropZone" for="fileInput">
+      <div class="drop-zone-icon">🖼️</div>
+      <p><strong>Tap to add images</strong> or drag & drop here</p>
+      <p style="margin-top:6px;font-size:13px;">Supports JPG, PNG, HEIC, WebP</p>
+    </label>
+    <input type="file" id="fileInput" accept="image/*" multiple />
+    <div class="queue-grid" id="queueGrid"></div>
+  </div>
+</div>
+
+<!-- ── ENTRY FORM ── -->
+
+<div id="view-entry" class="view">
+  <div class="entry-container">
+    <div class="entry-nav">
+      <button class="btn btn-ghost" onclick="showView('queue')">← Back</button>
+      <div class="entry-nav-title" id="entryNavTitle">Enter Details</div>
+      <span class="entry-nav-info" id="entryNavInfo"></span>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+
+```
+<div class="entry-layout">
+  <div class="image-panel">
+    <div class="image-preview-box" id="entryImageBox">🖼️</div>
+    <p class="image-filename" id="entryFilename"></p>
+  </div>
+  <div class="form-panel">
+
+    <div class="field-group">
+      <label class="field-label">Category <span class="field-required">*</span></label>
+      <div class="cat-selector">
+        <button class="cat-btn" data-cat="M" onclick="selectCat('M')">
+          <span class="cat-btn-letter">M</span>
+          <span class="cat-btn-label">Mixed</span>
+        </button>
+        <button class="cat-btn" data-cat="S" onclick="selectCat('S')">
+          <span class="cat-btn-letter">S</span>
+          <span class="cat-btn-label">Sculpture</span>
+        </button>
+        <button class="cat-btn" data-cat="P" onclick="selectCat('P')">
+          <span class="cat-btn-letter">P</span>
+          <span class="cat-btn-label">Painting</span>
+        </button>
+      </div>
+      <div class="cat-number-preview" id="catPreview">Select a category to see the next number</div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">Title / Name <span class="field-required">*</span></label>
+      <input type="text" id="f-title" class="field-input" placeholder="Artwork title" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Gallery</label>
+      <input type="text" id="f-gallery" class="field-input" placeholder="Gallery or collection name" />
+    </div>
+    <div class="field-group">
+      <label class="field-label">Medium / Materials</label>
+      <input type="text" id="f-medium" class="field-input" placeholder="e.g. Oil on canvas" />
+    </div>
+    <div class="field-row">
+      <div class="field-group">
+        <label class="field-label">Size / Dimensions</label>
+        <input type="text" id="f-dimensions" class="field-input" placeholder="e.g. 60×90 cm" />
+      </div>
+      <div class="field-group">
+        <label class="field-label">Price / Value</label>
+        <input type="text" id="f-price" class="field-input" placeholder="e.g. $1,200" />
+      </div>
+    </div>
+    <div class="field-group">
+      <label class="field-label">Condition / Notes</label>
+      <textarea id="f-notes" class="field-textarea" placeholder="Condition, provenance, notes…"></textarea>
+    </div>
+
+    <div class="form-actions">
+      <button class="btn btn-outline" onclick="skipEntry()">Skip</button>
+      <button class="btn btn-accent" onclick="saveEntry()">Save to Catalogue →</button>
+    </div>
+  </div>
+</div>
+```
+
+  </div>
+</div>
+
+<!-- ── CATALOGUE ── -->
+
+<div id="view-log" class="view">
+  <div class="log-container">
+    <div class="log-header">
+      <h1 class="log-title">Catalogue</h1>
+      <button class="btn btn-outline btn-sm" onclick="exportCSV()">⬇ Export CSV</button>
+    </div>
+
+```
+<div class="filter-bar">
+  <span class="filter-label">Category</span>
+  <button class="filter-chip active" data-cat="ALL" onclick="setCatFilter('ALL',this)">All</button>
+  <button class="filter-chip" data-cat="M" onclick="setCatFilter('M',this)">M — Mixed</button>
+  <button class="filter-chip" data-cat="S" onclick="setCatFilter('S',this)">S — Sculpture</button>
+  <button class="filter-chip" data-cat="P" onclick="setCatFilter('P',this)">P — Painting</button>
+  <div class="filter-divider"></div>
+  <span class="filter-label">Gallery</span>
+  <select class="filter-select" id="filterGallery" onchange="renderCatalogue()">
+    <option value="">All</option>
+  </select>
+  <div class="filter-divider"></div>
+  <span class="filter-label">Size</span>
+  <input class="filter-search" id="filterSize" placeholder="e.g. 60×90" oninput="renderCatalogue()" style="width:110px;" />
+  <div class="filter-divider"></div>
+  <input class="filter-search" id="filterSearch" placeholder="🔍 Search title…" oninput="renderCatalogue()" style="min-width:170px;" />
+</div>
+
+<div class="results-info" id="resultsInfo"></div>
+<div id="logContent"></div>
+```
+
+  </div>
+</div>
+
+<!-- ── EDIT MODAL ── -->
+
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Edit Artwork</h2>
+      <button class="btn btn-ghost" onclick="closeEdit()" style="font-size:22px;padding:4px 10px;">×</button>
+    </div>
+    <div class="modal-form">
+      <div class="field-group">
+        <label class="field-label">Category</label>
+        <div class="cat-selector">
+          <button class="cat-btn" data-ecat="M" onclick="selectEditCat('M')"><span class="cat-btn-letter">M</span><span class="cat-btn-label">Mixed</span></button>
+          <button class="cat-btn" data-ecat="S" onclick="selectEditCat('S')"><span class="cat-btn-letter">S</span><span class="cat-btn-label">Sculpture</span></button>
+          <button class="cat-btn" data-ecat="P" onclick="selectEditCat('P')"><span class="cat-btn-letter">P</span><span class="cat-btn-label">Painting</span></button>
+        </div>
+      </div>
+      <div class="field-group"><label class="field-label">Title / Name</label><input type="text" id="e-title" class="field-input" /></div>
+      <div class="field-group"><label class="field-label">Gallery</label><input type="text" id="e-gallery" class="field-input" /></div>
+      <div class="field-group"><label class="field-label">Medium / Materials</label><input type="text" id="e-medium" class="field-input" /></div>
+      <div class="field-row">
+        <div class="field-group"><label class="field-label">Size / Dimensions</label><input type="text" id="e-dimensions" class="field-input" /></div>
+        <div class="field-group"><label class="field-label">Price / Value</label><input type="text" id="e-price" class="field-input" /></div>
+      </div>
+      <div class="field-group"><label class="field-label">Condition / Notes</label><textarea id="e-notes" class="field-textarea"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-danger btn-sm" onclick="deleteEntry()">🗑 Delete</button>
+      <button class="btn btn-outline" onclick="closeEdit()">Cancel</button>
+      <button class="btn btn-accent" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+// ─── STATE ───
+let queue = [];
+let catalogue = [];
+let currentQueueId = null;
+let selectedCatEntry = null;
+let editingId = null;
+let editingCat = null;
+let filterCat = 'ALL';
+
+function load() {
+  try {
+    const c = localStorage.getItem('artlog_v3');
+    if (c) catalogue = JSON.parse(c);
+  } catch(e) {}
+}
+
+function save() {
+  try {
+    localStorage.setItem('artlog_v3', JSON.stringify(catalogue));
+  } catch(e) {
+    // If quota exceeded, save without images
+    try {
+      localStorage.setItem('artlog_v3', JSON.stringify(catalogue.map(e => ({...e, dataUrl:''}))));
+    } catch(e2) {}
+  }
+}
+
+// ─── NUMBERING ───
+function nextNum(cat) {
+  const existing = catalogue.filter(e => e.cat === cat);
+  if (!existing.length) return `${cat}001`;
+  const max = Math.max(...existing.map(e => parseInt((e.number||'').slice(1)) || 0));
+  return `${cat}${String(max + 1).padStart(3,'0')}`;
+}
+
+// ─── VIEWS ───
+function showView(name, tabEl) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('view-' + name).classList.add('active');
+  (tabEl || document.getElementById('tab-' + name))?.classList.add('active');
+  if (name === 'log') { buildGalleryFilter(); renderCatalogue(); }
+}
+
+// ─── QUEUE ───
+document.getElementById('fileInput').addEventListener('change', e => {
+  addFiles(Array.from(e.target.files)); e.target.value = '';
+});
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('dragging'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('dragging'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('dragging');
+  addFiles(Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/')));
+});
+
+function addFiles(files) {
+  files.forEach(file => {
+    const id = `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      queue.push({ id, dataUrl: ev.target.result, name: file.name, status: 'pending' });
+      renderQueue();
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderQueue() {
+  const pending = queue.filter(i => i.status === 'pending');
+  const done = queue.filter(i => i.status === 'done');
+  document.getElementById('queueCount').textContent = `${pending.length} pending`;
+  const grid = document.getElementById('queueGrid');
+  grid.innerHTML = '';
+  [...pending, ...done].forEach(item => {
+    const card = document.createElement('div');
+    card.className = 'queue-card' + (item.status === 'done' ? ' done' : '');
+    card.innerHTML = `
+      <button class="queue-card-remove" onclick="removeQueue('${item.id}',event)">×</button>
+      <div class="queue-card-img"><img src="${item.dataUrl}" /></div>
+      <div class="queue-card-info">
+        <div class="queue-card-name">${item.name}</div>
+        <div class="queue-card-status">${item.status === 'done' ? '✓ Catalogued' : 'Tap to enter details'}</div>
+      </div>`;
+    card.addEventListener('click', () => openEntry(item.id));
+    grid.appendChild(card);
+  });
+}
+
+function removeQueue(id, e) {
+  e.stopPropagation();
+  queue = queue.filter(i => i.id !== id);
+  renderQueue();
+}
+
+function clearDone() {
+  queue = queue.filter(i => i.status !== 'done');
+  renderQueue();
+  toast('Completed items cleared.');
+}
+
+// ─── ENTRY FORM ───
+function openEntry(id) {
+  currentQueueId = id;
+  selectedCatEntry = null;
+  const item = queue.find(i => i.id === id);
+  if (!item) return;
+
+  document.getElementById('entryImageBox').innerHTML = `<img src="${item.dataUrl}" />`;
+  document.getElementById('entryFilename').textContent = item.name;
+  const idx = queue.findIndex(i => i.id === id);
+  document.getElementById('entryNavTitle').textContent = item.name.replace(/\.[^.]+$/, '');
+  document.getElementById('entryNavInfo').textContent = `${idx + 1} of ${queue.length}`;
+  document.getElementById('progressBar').style.width =
+    (queue.filter(i => i.status === 'done').length / queue.length * 100) + '%';
+
+  // Reset
+  document.querySelectorAll('.cat-btn[data-cat]').forEach(b => b.classList.remove('selected'));
+  document.getElementById('catPreview').innerHTML = 'Select a category to see the next number';
+  ['f-title','f-gallery','f-medium','f-dimensions','f-price','f-notes'].forEach(fid => {
+    document.getElementById(fid).value = '';
+  });
+
+  // Pre-fill if already saved
+  const ex = catalogue.find(c => c.queueId === id);
+  if (ex) {
+    selectCat(ex.cat);
+    document.getElementById('f-title').value = ex.title || '';
+    document.getElementById('f-gallery').value = ex.gallery || '';
+    document.getElementById('f-medium').value = ex.medium || '';
+    document.getElementById('f-dimensions').value = ex.dimensions || '';
+    document.getElementById('f-price').value = ex.price || '';
+    document.getElementById('f-notes').value = ex.notes || '';
+  }
+
+  showView('entry');
+}
+
+function selectCat(cat) {
+  selectedCatEntry = cat;
+  document.querySelectorAll('.cat-btn[data-cat]').forEach(b =>
+    b.classList.toggle('selected', b.dataset.cat === cat));
+  const labels = { M:'Mixed', S:'Sculpture', P:'Painting' };
+  const n = nextNum(cat);
+  const count = catalogue.filter(e => e.cat === cat).length;
+  document.getElementById('catPreview').innerHTML =
+    `Next number: <strong>${n}</strong> &nbsp;·&nbsp; ${count} in ${labels[cat]}`;
+}
+
+function saveEntry() {
+  const item = queue.find(i => i.id === currentQueueId);
+  if (!item) return;
+  if (!selectedCatEntry) { toast('Please select a category', 'error'); return; }
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { toast('Title is required', 'error'); return; }
+
+  const exIdx = catalogue.findIndex(c => c.queueId === item.id);
+  const number = (exIdx >= 0 && catalogue[exIdx].cat === selectedCatEntry)
+    ? catalogue[exIdx].number
+    : nextNum(selectedCatEntry);
+
+  const entry = {
+    id: exIdx >= 0 ? catalogue[exIdx].id : `${Date.now()}_${Math.random().toString(36).slice(2)}`,
+    queueId: item.id,
+    filename: item.name,
+    dataUrl: item.dataUrl,
+    cat: selectedCatEntry,
+    number,
+    title,
+    gallery: document.getElementById('f-gallery').value.trim(),
+    medium: document.getElementById('f-medium').value.trim(),
+    dimensions: document.getElementById('f-dimensions').value.trim(),
+    price: document.getElementById('f-price').value.trim(),
+    notes: document.getElementById('f-notes').value.trim(),
+    dateAdded: exIdx >= 0 ? catalogue[exIdx].dateAdded : new Date().toLocaleDateString()
+  };
+
+  if (exIdx >= 0) catalogue[exIdx] = entry;
+  else catalogue.push(entry);
+  save();
+  item.status = 'done';
+  renderQueue();
+  toast(`Saved as ${number}`, 'success');
+
+  setTimeout(() => {
+    const next = queue.find(i => i.status === 'pending');
+    if (next) openEntry(next.id);
+    else { showView('queue'); toast('Queue complete! 🎉', 'success'); }
+  }, 900);
+}
+
+function skipEntry() {
+  const next = queue.find(i => i.id !== currentQueueId && i.status === 'pending');
+  if (next) openEntry(next.id);
+  else showView('queue');
+}
+
+// ─── CATALOGUE ───
+function buildGalleryFilter() {
+  const sel = document.getElementById('filterGallery');
+  const cur = sel.value;
+  const galleries = [...new Set(catalogue.map(e => e.gallery).filter(Boolean))].sort();
+  sel.innerHTML = '<option value="">All</option>' +
+    galleries.map(g => `<option value="${g}"${g===cur?' selected':''}>${g}</option>`).join('');
+}
+
+function setCatFilter(cat, el) {
+  filterCat = cat;
+  document.querySelectorAll('.filter-chip[data-cat]').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderCatalogue();
+}
+
+function getFiltered() {
+  const gallery = document.getElementById('filterGallery').value;
+  const size = document.getElementById('filterSize').value.trim().toLowerCase();
+  const search = document.getElementById('filterSearch').value.trim().toLowerCase();
+  return catalogue.filter(e => {
+    if (filterCat !== 'ALL' && e.cat !== filterCat) return false;
+    if (gallery && e.gallery !== gallery) return false;
+    if (size && !(e.dimensions||'').toLowerCase().includes(size)) return false;
+    if (search && !(e.title||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+function renderCatalogue() {
+  const el = document.getElementById('logContent');
+  const filtered = getFiltered();
+  document.getElementById('resultsInfo').textContent =
+    `Showing ${filtered.length} of ${catalogue.length} artworks`;
+
+  if (!catalogue.length) {
+    el.innerHTML = `<div class="empty-state"><h3>No artworks yet</h3><p>Add images to the queue and fill in their details.</p></div>`;
+    return;
+  }
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty-state"><h3>No results</h3><p>Try adjusting your filters.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="catalogue-grid">${filtered.map(e => `
+    <div class="cat-card">
+      <div class="cat-card-img">
+        ${e.dataUrl ? `<img src="${e.dataUrl}" alt="${e.title}" />` : '🖼️'}
+      </div>
+      <div class="cat-card-body">
+        <div class="cat-card-num ${e.cat}">${e.number}</div>
+        <div class="cat-card-title">${e.title}</div>
+        ${e.gallery ? `<div class="cat-card-gallery">${e.gallery}</div>` : ''}
+        <div class="cat-card-details">
+          ${e.medium ? `<div>${e.medium}</div>` : ''}
+          ${e.dimensions ? `<div>📐 ${e.dimensions}</div>` : ''}
+          ${e.notes ? `<div style="margin-top:4px;font-style:italic;">${e.notes.substring(0,70)}${e.notes.length>70?'…':''}</div>` : ''}
+        </div>
+        ${e.price ? `<div class="cat-card-price">${e.price}</div>` : ''}
+      </div>
+      <div class="cat-card-actions">
+        <button class="btn btn-outline btn-sm" onclick="openEdit('${e.id}')">✏️ Edit</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+// ─── EDIT MODAL ───
+function openEdit(id) {
+  editingId = id;
+  const e = catalogue.find(c => c.id === id);
+  if (!e) return;
+  editingCat = e.cat;
+  document.querySelectorAll('.cat-btn[data-ecat]').forEach(b =>
+    b.classList.toggle('selected', b.dataset.ecat === e.cat));
+  document.getElementById('e-title').value = e.title || '';
+  document.getElementById('e-gallery').value = e.gallery || '';
+  document.getElementById('e-medium').value = e.medium || '';
+  document.getElementById('e-dimensions').value = e.dimensions || '';
+  document.getElementById('e-price').value = e.price || '';
+  document.getElementById('e-notes').value = e.notes || '';
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+function selectEditCat(cat) {
+  editingCat = cat;
+  document.querySelectorAll('.cat-btn[data-ecat]').forEach(b =>
+    b.classList.toggle('selected', b.dataset.ecat === cat));
+}
+
+function saveEdit() {
+  const idx = catalogue.findIndex(c => c.id === editingId);
+  if (idx < 0) return;
+  const e = catalogue[idx];
+  const catChanged = editingCat && editingCat !== e.cat;
+  catalogue[idx] = {
+    ...e,
+    cat: editingCat || e.cat,
+    number: catChanged ? nextNum(editingCat) : e.number,
+    title: document.getElementById('e-title').value.trim() || e.title,
+    gallery: document.getElementById('e-gallery').value.trim(),
+    medium: document.getElementById('e-medium').value.trim(),
+    dimensions: document.getElementById('e-dimensions').value.trim(),
+    price: document.getElementById('e-price').value.trim(),
+    notes: document.getElementById('e-notes').value.trim()
+  };
+  save();
+  closeEdit();
+  buildGalleryFilter();
+  renderCatalogue();
+  toast('Changes saved!', 'success');
+}
+
+function deleteEntry() {
+  // iOS Safari blocks confirm() in some contexts, use custom approach
+  const modal = document.getElementById('editModal');
+  const confirmDiv = document.createElement('div');
+  confirmDiv.style.cssText = 'margin-top:12px;padding:14px;background:#fff0ee;border-radius:8px;border:1px solid var(--danger);text-align:center;';
+  confirmDiv.innerHTML = `<p style="font-size:14px;margin-bottom:12px;color:var(--danger);">Are you sure? This cannot be undone.</p>
+    <div style="display:flex;gap:10px;justify-content:center;">
+      <button onclick="this.closest('.confirm-delete').remove()" class="btn btn-outline btn-sm">Cancel</button>
+      <button onclick="confirmDelete()" class="btn btn-danger btn-sm">Yes, Delete</button>
+    </div>`;
+  confirmDiv.classList.add('confirm-delete');
+  // Remove any existing confirm divs
+  document.querySelectorAll('.confirm-delete').forEach(e => e.remove());
+  document.querySelector('.modal-actions').after(confirmDiv);
+}
+
+function confirmDelete() {
+  catalogue = catalogue.filter(c => c.id !== editingId);
+  save();
+  closeEdit();
+  buildGalleryFilter();
+  renderCatalogue();
+  toast('Artwork deleted.');
+}
+
+function closeEdit() {
+  document.getElementById('editModal').classList.add('hidden');
+  editingId = null; editingCat = null;
+}
+
+document.getElementById('editModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('editModal')) closeEdit();
+});
+
+// ─── EXPORT ───
+function exportCSV() {
+  if (!catalogue.length) { toast('No entries to export.', 'error'); return; }
+  const headers = ['Number','Category','Title','Gallery','Medium','Dimensions','Price','Condition/Notes','Date Added'];
+  const rows = catalogue.map(e =>
+    [e.number, e.cat, e.title, e.gallery, e.medium, e.dimensions, e.price, e.notes, e.dateAdded]
+    .map(v => `"${(v||'').replace(/"/g,'""')}"`)
+  );
+  const csv = [headers, ...rows].map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'artlog_catalogue.csv';
+  a.click();
+  toast('CSV exported!', 'success');
+}
+
+// ─── TOAST ───
+function toast(msg, type = '') {
+  const t = document.createElement('div');
+  t.className = 'toast' + (type ? ' ' + type : '');
+  t.textContent = msg;
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(() => t.remove(), 3000);
+}
+
+// ─── INIT ───
+load();
+</script>
+
+</body>
+</html>
